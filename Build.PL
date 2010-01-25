@@ -169,6 +169,7 @@ my $build = $class->new
                 "Config::General" => 0,
                 "Term::ReadLine" => 0,
                 "Term::ReadLine::Perl" => 0,
+                "Term::ShellUI" => "0.86",
                 "Term::Clui" => 0
                },
    recommends => {
@@ -178,7 +179,7 @@ my $build = $class->new
    build_requires => {
                       "Module::Build" => "0.35",
                       "File::Copy" => 0,
-                      "Test::More" => "0",
+                      "Test::More" => 0,
                       "Test::Deep" => 0,
                       "Test" => "0"
                      },                       

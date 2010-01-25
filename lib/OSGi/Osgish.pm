@@ -18,7 +18,7 @@ use JMX::Jmx4Perl;
 use JMX::Jmx4Perl::Request;
 use Data::Dumper;
 
-$VERSION = "0.1.0_1";
+$VERSION = "0.1.0_2";
 
 my $MBEANS_MAP = 
     { 
@@ -57,8 +57,8 @@ sub init {
     my $old_bundle = delete $self->{bundle};
     my $old_service = delete $self->{service};
     eval {
-        $self->{bundle} = $self->_fetch_list("bundleState","listBundles");
-        $self->{service} = $self->_fetch_list("serviceState","listServices");
+        $self->_fetch_bundles;
+        $self->_fetch_services;
     };
     if ($@) {
         $self->{bundle} = $old_bundle;
@@ -79,17 +79,32 @@ sub services {
     return $self->{service}->{list};
 }
 
-sub symbolic_names { 
+# Return a hashref with symbolic names as keys 
+# and the ids as values
+sub bundle_symbolic_names { 
     my $self = shift;
     $self->_update_bundles(@_);
     return $self->{bundle}->{symbolic_names};
 }
 
-sub ids {
+sub bundle_ids {
     my $self = shift;
     $self->_update_bundles(@_);
     return $self->{bundle}->{ids};
 }
+
+sub service_object_classes {
+    my $self = shift;
+    $self->_update_services(@_);
+    return $self->{service}->{object_classes};
+}
+
+sub service_ids {
+    my $self = shift;
+    $self->_update_services(@_);
+    return $self->{service}->{ids};
+}
+
 
 sub start_bundle {
     shift->_start_stop_bundle("start",@_);
@@ -137,8 +152,8 @@ sub last_error {
 sub _start_stop_bundle {
     my $self = shift;
     my $cmd = shift;
-    my $what = shift;
-
+    my $what = shift || die "No id or name given\n";
+    
     my $id = $what =~ /^\d+$/ ? $what : $self->symbolic_names->{$what};
     unless ($id) {
         die "Cannot $cmd bundle '$what': Not an id nor a symbolic name\n";
@@ -158,33 +173,43 @@ sub _update_services {
     my $self = shift;
     my $args = shift;
     $args = { $args, @_ } unless ref($args) eq "HASH";
-
     return if ($self->{service} && $args->{use_cached});
 
     # TODO: Update policy
 
     # Cache bundle list
     if ($self->_server_state_changed("services")) {
-        my $service = $self->_fetch_list("serviceState","listServices");
-        $self->{service} = $service;
+        $self->_fetch_services;
     }    
 }
 
 sub _update_bundles {
     my $self = shift;
     my $args = shift;
+    
     $args = { $args, @_ } unless ref($args) eq "HASH";
-
+    
     return if ($self->{bundle} && $args->{use_cached});
-
     # TODO: Update policy
 
     # Cache bundle list
     if ($self->_server_state_changed("bundles")) {
-        my $bundle = $self->_fetch_list("bundleState","listBundles");
-        $bundle->{symbolic_names} = $self->_extract_symbolic_names($bundle->{list});
-        $self->{bundle} = $bundle;
+        $self->_fetch_bundles;
     }
+}
+
+sub _fetch_bundles {
+    my $self = shift;
+    my $bundle = $self->_fetch_list("bundleState","listBundles");
+    $bundle->{symbolic_names} = $self->_extract_symbolic_names($bundle->{list});
+    $self->{bundle} = $bundle;    
+}
+
+sub _fetch_services {
+    my $self = shift;
+    my $service = $self->_fetch_list("serviceState","listServices");
+    $service->{object_classes} = $self->_extract_object_classes($service->{list});
+    $self->{service} = $service;
 }
 
 sub _fetch_list {
@@ -213,6 +238,20 @@ sub _extract_symbolic_names {
         next unless $sym;
         my $id = $bundles->{$e}->{Identifier};
         $ret->{$sym} = $id;
+    }
+    return $ret;
+}
+
+sub _extract_object_classes {
+    my $self = shift;
+    my $services = shift;
+    my $ret = {};
+    for my $s (values %$services) {
+        my $classes = $s->{objectClass};
+        next unless $classes;
+        $classes = [ $classes ] unless ref($classes) eq "ARRAY";
+        my $id = $s->{Identifier};
+        map { $ret->{$_} = $id } @$classes;
     }
     return $ret;
 }
