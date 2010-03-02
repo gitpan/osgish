@@ -48,9 +48,12 @@ sub new {
     my $class = shift;
     my $osgish = shift || "No osgish object given";    
     my $shell = shift || "No shell given";
+    my $extra = shift;
+    $extra = { $extra, @_ } unless ref($extra) eq "HASH";
     my $self = {
                 osgish => $osgish,
-                shell => $shell
+                shell => $shell,
+                %{$extra}
                };
     $self->{stack} = [];
     bless $self,(ref($class) || $class);
@@ -244,6 +247,40 @@ sub _prompt {
 }
 
 
+=head1 LICENSE
+
+This file is part of osgish.
+
+Osgish is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+osgish is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with osgish.  If not, see <http://www.gnu.org/licenses/>.
+
+A commercial license is available as well. Please contact roland@cpan.org for
+further details.
+
+=head1 PROFESSIONAL SERVICES
+
+Just in case you need professional support for this module (or JMX or OSGi in
+general), you might want to have a look at www.consol.com Contact
+roland.huss@consol.de for further information (or use the contact form at
+http://www.consol.com/contact/)
+
+=head1 AUTHOR
+
+roland@cpan.org
+
+=cut
+
 1;
+
 
 

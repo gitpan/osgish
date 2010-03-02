@@ -11,7 +11,7 @@ use OSGi::Osgish::CommandHandler;
 use Data::Dumper;
 use vars qw($VERSION);
 
-$VERSION = "0.1.0_3";
+$VERSION = "0.1.0";
 
 =head1 NAME 
 
@@ -23,8 +23,6 @@ This object is pushed to commands and allows access to all relevant
 informations shared between commands. A command should consult the 
 osgish object when performing its operation for contacting the OSGi server. 
 The osgish object gets updated in the background e.g. when the server changes. 
-
-=cut
 
 =head1 METHODS
 
@@ -96,8 +94,10 @@ sub _init {
     my $self = shift;
     $self->{complete} = new OSGi::Osgish::CompletionHandler($self);
     $self->{servers} = new OSGi::Osgish::ServerHandler($self);
-    $self->{shell} = $self->_create_shell;
-    $self->{commands} = new OSGi::Osgish::CommandHandler($self,$self->{shell});
+    my $shell = $self->_create_shell;
+    $self->{shell} = $shell;
+    my $no_color_prompt = $shell->readline ne "Term::ReadLine::Gnu";
+    $self->{commands} = new OSGi::Osgish::CommandHandler($self,$self->{shell},no_color_prompt => $no_color_prompt);
 }
 
 sub _create_shell {
@@ -106,13 +106,50 @@ sub _create_shell {
     if (exists $self->{args}->{color}) {
         $use_color = $self->{args}->{color};
     } elsif (exists $self->{config}->{use_color}) {
-        $use_color = $self->{args}->{color};
+        $use_color = $self->{config}->{use_color};
     } else {
-        $use_color = 1;
-    }
-    return new OSGi::Osgish::Shell(use_color => $use_color);
+        $use_color = "yes";
+    }    
+    return new OSGi::Osgish::Shell(use_color => $use_color =~ /(yes|true|on)$/);
 }
 
+=head1 LICENSE
+
+This file is part of osgish.
+
+Osgish is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+osgish is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with osgish.  If not, see <http://www.gnu.org/licenses/>.
+
+A commercial license is available as well. Please contact roland@cpan.org for
+further details.
+
+=head1 PROFESSIONAL SERVICES
+
+Just in case you need professional support for this module (or JMX or OSGi in
+general), you might want to have a look at www.consol.com Contact
+roland.huss@consol.de for further information (or use the contact form at
+http://www.consol.com/contact/)
+
+=head1 AUTHOR
+
+roland@cpan.org
+
+=cut
+
 1;
+
+
+1;
+
 
 
