@@ -50,7 +50,7 @@
    "provides" : {
       "OSGi::Osgish" : {
          "file" : "lib/OSGi/Osgish.pm",
-         "version" : "v0.3.0"
+         "version" : "v0.3.1"
       },
       "OSGi::Osgish::Agent" : {
          "file" : "lib/OSGi/Osgish/Agent.pm",
@@ -107,5 +107,5 @@
          "http://www.gnu.org/licenses/old-licenses/gpl-1.0.txt"
       ]
    },
-   "version" : "v0.3.0"
+   "version" : "v0.3.1"
 }
